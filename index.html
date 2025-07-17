@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WebGL Rec MediaProjection</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes" />
+
+  <!-- Agar ffmpeg.wasm tersedia di window.FFmpeg jika butuh -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    #unity-container {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+    }
+    #unity-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      touch-action: none;
+    }
+    #unity-loading-bar {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50%;
+      height: 20px;
+      background: rgba(255,255,255,0.3);
+    }
+    #unity-progress-bar-full {
+      width: 0%;
+      height: 100%;
+      background: #29d;
+    }
+  </style>
+</head>
+<body>
+  <div id="unity-container">
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="unity-loading-bar">
+      <div id="unity-progress-bar-full"></div>
+    </div>
+    <div id="unity-footer" style="position:absolute; bottom:0; width:100%; text-align:center; color:#fff; padding:5px;">
+      <button id="unity-fullscreen-button">Fullscreen</button>
+      <span id="unity-build-title">WebGL Rec MediaProjection</span>
+    </div>
+  </div>
+
+  <script>
+    // Fungsi banner (jika mau pakai)
+    function unityShowBanner(msg, type) {
+      console.warn(msg);
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/Build.loader.js";
+    var config = {
+      dataUrl: buildUrl + "/Build.data.unityweb",
+      frameworkUrl: buildUrl + "/Build.framework.js.unityweb",
+      codeUrl: buildUrl + "/Build.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "DefaultCompany",
+      productName: "WebGL Rec MediaProjection",
+      productVersion: "0.1",
+      showBanner: unityShowBanner,
+    };
+
+    // Load Unity
+    var script = document.createElement('script');
+    script.src = loaderUrl;
+    script.onload = function() {
+      createUnityInstance(
+        document.getElementById('unity-canvas'),
+        config,
+        function(progress) {
+          document.getElementById('unity-progress-bar-full').style.width = (progress * 100) + '%';
+        }
+      ).then(function(unityInstance) {
+        // Sembunyikan loading bar
+        document.getElementById('unity-loading-bar').style.display = 'none';
+
+        // Inisialisasi recorder
+        unityInstance.SendMessage('RecorderManager', 'InitializeRecorder');
+
+        // Setup tombol fullscreen
+        var fsButton = document.getElementById('unity-fullscreen-button');
+        fsButton.addEventListener('click', function() {
+          unityInstance.SetFullscreen(1);
+        });
+      }).catch(function(err) {
+        console.error(err);
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
